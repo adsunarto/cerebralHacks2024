@@ -1,0 +1,8 @@
+.env
+pyvenv.cfg
+__pycache__
+bin
+include/*
+lib/*
+videos/*
+.DS_Store
