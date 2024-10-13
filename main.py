@@ -1,18 +1,19 @@
 import os
 from glob import glob
 from fastapi import FastAPI
+import json
+import requests
+
 from twelvelabs import TwelveLabs
 from twelvelabs.models.task import Task
-
 from dotenv import load_dotenv
 
 load_dotenv()
-
-
 app = FastAPI()
 
 client = TwelveLabs(api_key=os.getenv("TWELVELABS_API_KEY"))
-TWELVE_OUTPUT = "./twelve_output/"
+
+KINDO_API_KEY = os.getenv("KINDO_API_KEY")
 
 
 @app.get("/")
@@ -20,56 +21,8 @@ async def read_root():
     return {"message": "Hello, world!"}
 
 
-# @app.get("/details/{subject}")  # subject is index (i.e. shopify, ios, etc.)
-# async def summarize(subject: str = None):
-#     if not subject:
-#         return {"Error": "No title provided."}
-
-#     videos = client.index.video.list(index.id)
-#     for video in videos:
-#         print(f"Generating text for {video.id}")
-
-#         res = client.generate.gist(
-#             video_id=video.id, types=["title", "topic", "hashtag"]
-#         )
-#         print(f"Title: {res.title}\nTopics={res.topics}\nHashtags={res.hashtags}")
-
-#         res = client.generate.summarize(video_id=video.id, type="summary")
-#         # print(f"Summary: {res.summary}")
-#         with open(TWELVE_OUTPUT + f"/{subject}_summary.out", "w+") as f:
-#             f.write(res.summary)
-
-#         print("Chapters:")
-#         res = client.generate.summarize(video_id=video.id, type="chapter")
-#         for chapter in res.chapters:
-#             with open(TWELVE_OUTPUT + f"/{subject}_chapter.out", "a+") as f:
-#                 f.write(
-#                     f"chapter_number={chapter.chapter_number} chapter_title={chapter.chapter_title} chapter_summary={chapter.chapter_summary} start={chapter.start} end={chapter.end}"
-#                 )
-#             # print(
-#             #     f"  chapter_number={chapter.chapter_number} chapter_title={chapter.chapter_title} chapter_summary={chapter.chapter_summary} start={chapter.start} end={chapter.end}"
-#             # )
-
-#         # print("Highlights:")
-#         # res = client.generate.summarize(video_id=video.id, type="highlight")
-#         # for highlight in res.highlights:
-#         #     with open(TWELVE_OUTPUT+f'/{subject}_highlights.out', 'a+') as f:
-#         #         f.write(f'Highlight={highlight.highlight} start={highlight.start} end={highlight.end}')
-#         #     print(
-#         #         f"  Highlight={highlight.highlight} start={highlight.start} end={highlight.end}"
-#         #     )
-
-#         res = client.generate.text(
-#             video_id=video.id,
-#             prompt="Based on this video, I want to generate five keywords for SEO (Search Engine Optimization).",
-#         )
-#         with open(TWELVE_OUTPUT + f"/{subject}_chapter.out", "a+") as f:
-#             f.write(f"Open-ended Text: {res.data}")
-#         # print(f"Open-ended Text: {res.data}")
-
-
-@app.get("/index/{index_name}")  # subject is index (i.e. shopify, ios, etc.)
-async def get(index_name: str = None):
+@app.get("/index/{index_name}")
+async def get(index_name: str):
     if not index_name:
         return {"Error": "No index_name provided."}
 
@@ -108,7 +61,7 @@ async def get(index_name: str = None):
     return {"Success": f"{index_name} indexed."}
 
 
-@app.get("/summary/{index_name}")  # subject is index (i.e. shopify, ios, etc.)
+@app.get("/summary/{index_name}")
 async def summary(index_name: str):
     if not index_name:
         return {"Error": "No title provided."}
@@ -121,12 +74,12 @@ async def summary(index_name: str):
     for video in videos:
         res = client.generate.summarize(video_id=video.id, type="summary")
         # print(f"Summary: {res.summary}")
-        with open(TWELVE_OUTPUT + f"/{index_name}_summary.out", "w+") as f:
+        with open(f"./twelve_output/{index_name}_summary.out", "w+") as f:
             f.write(res.summary)
     return {"Success": f"Output written to {index_name}_summary.out"}
 
 
-@app.get("/chapter/{index_name}")  # subject is index (i.e. shopify, ios, etc.)
+@app.get("/chapter/{index_name}")
 async def chapter(index_name: str):
     if not index_name:
         return {"Error": "No title provided."}
@@ -139,14 +92,14 @@ async def chapter(index_name: str):
     for video in videos:
         res = client.generate.summarize(video_id=video.id, type="chapter")
         for chapter in res.chapters:
-            with open(TWELVE_OUTPUT + f"/{index_name}_chapter.out", "a+") as f:
+            with open(f"./twelve_output/{index_name}_chapter.out", "a+") as f:
                 f.write(
                     f"chapter_number={chapter.chapter_number} chapter_title={chapter.chapter_title} chapter_summary={chapter.chapter_summary} start={chapter.start} end={chapter.end}"
                 )
     return {"Success": f"Output written to {index_name}_chapter.out"}
 
 
-@app.get("/highlight/{index_name}")  # subject is index (i.e. shopify, ios, etc.)
+@app.get("/highlight/{index_name}")
 async def highlight(index_name: str):
     # if not index_name:
     #     return {"Error": "No title provided."}
@@ -159,7 +112,7 @@ async def highlight(index_name: str):
     # for video in videos:
     #     res = client.generate.summarize(video_id=video.id, type="highlight")
     #     for highlight in res.highlights:
-    #         with open(TWELVE_OUTPUT+f'/{subject}_highlights.out', 'a+') as f:
+    #         with open(f"./twelve_output/{subject}_highlights.out', 'a+') as f:
     #             f.write(f'Highlight={highlight.highlight} start={highlight.start} end={highlight.end}')
     #         print(
     #             f"  Highlight={highlight.highlight} start={highlight.start} end={highlight.end}"
@@ -168,7 +121,7 @@ async def highlight(index_name: str):
     return {"Error", "/highlight endpoint not implemented."}
 
 
-@app.get("/query/{index_name}")  # index_name is index (i.e. shopify, ios, etc.)
+@app.get("/query/{index_name}")
 async def query(index_name: str, prompt: str):
     if not prompt:
         return {"Error": "No prompt provided."}
@@ -184,6 +137,60 @@ async def query(index_name: str, prompt: str):
             video_id=video.id,
             prompt=f"{prompt}",
         )
-    with open(TWELVE_OUTPUT + f"/{index_name}_prompt.out", "w+") as f:
+    with open(f"./twelve_output/{index_name}_prompt.out", "w+") as f:
         f.write(f"{res.data}")
     return {"Success": f"Output written to {index_name}_prompt.out"}
+
+
+@app.get("/summarize/{index_name}")
+async def summarize(index_name: str, prompt: str):
+    if not prompt:
+        return {"Error": "No prompt provided."}
+    print("Prompt", prompt)
+
+    with open(f"./twelve_output/{index_name}_summary.out", "r") as f:
+        summary = f.readlines()
+
+    # Define the URL, headers, and data
+    url = "https://llm.kindo.ai/v1/chat/completions"
+    headers = {"api-key": f"{KINDO_API_KEY}", "Content-Type": "application/json"}
+    data = {
+        "model": "watsonx/ibm/granite-13b-chat-v2",
+        "messages": [
+            {"role": "system", "content": f"{summary}"},
+            {"role": "user", "content": f"{prompt}"},
+        ],
+    }
+
+    # Send the request
+    response = requests.post(
+        url, headers=headers, json=data
+    )  # Use 'json' for JSON data or 'data' for form-encoded
+
+    # Check response status and content
+    if response.status_code == 200:
+        print("Request was successful!")
+        print("Response data:", response.json())
+        return response.json()["choices"][0]["message"]["content"]
+    else:
+        print(f"Request failed with status code {response.status_code}")
+        print("Response content:", response.text)
+        return response.text
+
+
+# curl https: //llm.kindo.ai/v1/chat/completions \
+#   -H "api-key: 2d3b28af-6f44-4e54-a696-8960ff71b25d-0d9cc35fcdcc1059" \
+#   -H "content-type: application/json" \
+#   -d '{
+#     "model": "watsonx/ibm/granite-13b-chat-v2",
+#     "messages": [
+#         {
+#             "role": "system",
+#             "content": "Summary: The video provides a comprehensive sneak peek into the next generation of iOS, highlighting numerous new features and improvements. It begins with an announcement of the new iOS, followed by a quick succession of demonstrations showcasing the latest additions to the operating system. These include enhancements to the control center with options like Disconnect from Wi-Fi and Airplane Mode, and a new Unlock with Apple Watch feature on the lock screen. The home screen now includes an App Library for better app organization. Other notable updates include QuickTake and Volume Button Shutter in the camera app, a dynamic wallpaper option, and a Back Tap feature in settings. The health app introduces Sleep Tracking, and there are new functionalities in the messages app with Pinned Conversations. Family Setup, Guides in the maps app, and an enhanced Apple Arcade are also part of the update. Subscription services are streamlined with Apple One, and privacy settings are bolstered with new features. Accessibility receives attention with new tools, and the AirPods Max feature is introduced. The Home app, Safari, and Shortcuts also see improvements. The photos app now includes more robust editing capabilities, and the reminders and notes apps are updated for better usability. Weather, clock, files, music, and TV apps all receive enhancements. Additionally, theres a new Translate app, updated Memoji options, and more features in maps and messages. The mail, calendar, and photos memories apps are also updated. Screen Time, Find My, settings, notifications, wallpaper, and control center all receive new features. Dark Mode, Focus, Sleep, health, and fitness apps round out the extensive list of updates, culminating with a teaser that these features are Coming soon. Stay tuned. The video aims to inform and excite viewers about the forthcoming iOS updates, emphasizing Apples commitment to innovation and user experience."
+#         },
+#         {
+#             "role": "user",
+#             "content": "What went well during this demo? What can be improved? Provide your response in two sections with bullet points."
+#         }
+#     ]
+# }'
