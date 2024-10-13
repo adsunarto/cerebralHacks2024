@@ -22,7 +22,7 @@ async def read_root():
 
 
 @app.get("/index/{index_name}")
-async def get(index_name: str):
+async def twelve_index(index_name: str):
     if not index_name:
         return {"Error": "No index_name provided."}
 
@@ -62,7 +62,7 @@ async def get(index_name: str):
 
 
 @app.get("/summary/{index_name}")
-async def summary(index_name: str):
+async def twelve_summary(index_name: str):
     if not index_name:
         return {"Error": "No title provided."}
 
@@ -80,7 +80,7 @@ async def summary(index_name: str):
 
 
 @app.get("/chapter/{index_name}")
-async def chapter(index_name: str):
+async def twelve_chapter(index_name: str):
     if not index_name:
         return {"Error": "No title provided."}
 
@@ -100,7 +100,7 @@ async def chapter(index_name: str):
 
 
 @app.get("/highlight/{index_name}")
-async def highlight(index_name: str):
+async def twelve_highlight(index_name: str):
     # if not index_name:
     #     return {"Error": "No title provided."}
 
@@ -121,8 +121,8 @@ async def highlight(index_name: str):
     return {"Error", "/highlight endpoint not implemented."}
 
 
-@app.get("/query/{index_name}")
-async def query(index_name: str, prompt: str):
+@app.get("/twelve_query/{index_name}")
+async def twelve_query(index_name: str, prompt: str):
     if not prompt:
         return {"Error": "No prompt provided."}
     print("Prompt", prompt)
@@ -142,8 +142,8 @@ async def query(index_name: str, prompt: str):
     return {"Success": f"Output written to {index_name}_prompt.out"}
 
 
-@app.get("/summarize/{index_name}")
-async def summarize(index_name: str, prompt: str):
+@app.get("/kindo_query/{index_name}")
+async def kindo_query(index_name: str, prompt: str):
     if not prompt:
         return {"Error": "No prompt provided."}
     print("Prompt", prompt)
@@ -176,21 +176,3 @@ async def summarize(index_name: str, prompt: str):
         print(f"Request failed with status code {response.status_code}")
         print("Response content:", response.text)
         return response.text
-
-
-# curl https: //llm.kindo.ai/v1/chat/completions \
-#   -H "api-key: 2d3b28af-6f44-4e54-a696-8960ff71b25d-0d9cc35fcdcc1059" \
-#   -H "content-type: application/json" \
-#   -d '{
-#     "model": "watsonx/ibm/granite-13b-chat-v2",
-#     "messages": [
-#         {
-#             "role": "system",
-#             "content": "Summary: The video provides a comprehensive sneak peek into the next generation of iOS, highlighting numerous new features and improvements. It begins with an announcement of the new iOS, followed by a quick succession of demonstrations showcasing the latest additions to the operating system. These include enhancements to the control center with options like Disconnect from Wi-Fi and Airplane Mode, and a new Unlock with Apple Watch feature on the lock screen. The home screen now includes an App Library for better app organization. Other notable updates include QuickTake and Volume Button Shutter in the camera app, a dynamic wallpaper option, and a Back Tap feature in settings. The health app introduces Sleep Tracking, and there are new functionalities in the messages app with Pinned Conversations. Family Setup, Guides in the maps app, and an enhanced Apple Arcade are also part of the update. Subscription services are streamlined with Apple One, and privacy settings are bolstered with new features. Accessibility receives attention with new tools, and the AirPods Max feature is introduced. The Home app, Safari, and Shortcuts also see improvements. The photos app now includes more robust editing capabilities, and the reminders and notes apps are updated for better usability. Weather, clock, files, music, and TV apps all receive enhancements. Additionally, theres a new Translate app, updated Memoji options, and more features in maps and messages. The mail, calendar, and photos memories apps are also updated. Screen Time, Find My, settings, notifications, wallpaper, and control center all receive new features. Dark Mode, Focus, Sleep, health, and fitness apps round out the extensive list of updates, culminating with a teaser that these features are Coming soon. Stay tuned. The video aims to inform and excite viewers about the forthcoming iOS updates, emphasizing Apples commitment to innovation and user experience."
-#         },
-#         {
-#             "role": "user",
-#             "content": "What went well during this demo? What can be improved? Provide your response in two sections with bullet points."
-#         }
-#     ]
-# }'
