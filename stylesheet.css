@@ -1,0 +1,25 @@
+.video-thumbnail {
+    position: relative;
+    cursor: pointer;
+  }
+  
+  .video-thumbnail img {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .play-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  
+  .play-button img {
+    width: 50px;
+    height: 50px;
+  }
+  img.card-img-top {
+    width: 100%; 
+    height: auto;
+  }
